@@ -1,0 +1,87 @@
+---
+#----------------------------------------------------------------------
+# app name is shown at the top of the dashboard menu
+# description is used when needing to query the user for the desired target app
+# semantic version is of form v0.0.0: https://semver.org/
+# external modules will come from latest suite versions unless listed in suiteVersions
+#----------------------------------------------------------------------
+name: AA_viewer
+description: "Viewer for Amplicon Architect/Pipeline analysis"
+# version: v0.0.0 # OPTIONAL
+# suiteVersions:
+#     suiteName: v0.0.0
+
+#----------------------------------------------------------------------
+# project data file type(s) associated with this app
+#   - the keys in uploadTypes are matched to key uploadType in incoming package.yml
+#   - required files lead to rejection of a project file if missing
+#----------------------------------------------------------------------
+uploadTypes:
+    amplicon-suite-run:  # <<< Type key for the data package
+        contentFileTypes:
+            # Key files from the classification directory
+            classification_results_table:
+                required: true  # Essential overview table
+                patterns: ["*/_classification/*_result_table.tsv"] # Matches one file
+            classification_profiles:
+                required: true  # Essential profiles table
+                patterns: ["*/_classification/*_amplicon_classification_profiles.tsv"] # Matches one file
+            annotated_cycles:
+                required: false # Optional for now, potentially complex to parse
+                patterns: ["*/_classification/*_annotated_cycles_files/*_annotated_cycles.txt"] # Matches one-or-more files
+            sv_summaries:
+                required: false # Optional for now
+                patterns: ["*/_classification/*_SV_summaries/*_SV_summary.tsv"] # Matches one-or-more files
+
+            # Key files from the AA_results directory
+            aa_summary:
+                required: false # Optional, might duplicate info in classification tables
+                patterns: ["*/_AA_results/*_summary.txt"] # Matches one file
+            aa_sv_png:
+                required: false # Optional visualization
+                patterns: ["*/_AA_results/*_amplicon*.png"] # Matches one-or-more files
+
+            # Placeholder for other potential files if needed later
+            # aa_graph:
+            #     required: false
+            #     patterns: ["*/_AA_results/*_amplicon*_graph.txt"]
+            # aa_cycles:
+            #     required: false
+            #     patterns: ["*/_AA_results/*_amplicon*_cycles.txt"]
+            # gene_list:
+            #     required: false
+            #     patterns: ["*/_classification/*_gene_list.tsv"]
+
+#----------------------------------------------------------------------
+# labels and definitions for all sequential analysis steps shown in sidebar
+#----------------------------------------------------------------------
+# module = the appSteps module used for a sequential step
+#    the keyed name of a step becomes its namespace in the 'app' object
+# shortLabel = as shown on dashboard menu (required if not provided as module default)
+# shortDescription = as shown on the Overview page (required if not provided as module default)
+# options = passed to both <module>UI and <module>Server functions
+#    longLabel = the title for the appStep tabbed page
+#    alwaysVisible = declares that step is NOT sequential and thus always available
+#    other options are module specific; see module definitions
+#----------------------------------------------------------------------
+appSteps:
+    upload: # nearly always the 1st step of every app
+        module: sourceFileUpload
+    assign: # usually the 2nd step of every app
+        module: assignSamples        
+        options:
+            categories:
+                example1: # category1
+                    singular: Example
+                    plural: Examples
+                    nLevels: 1:10
+                example2: # category2
+                    singular: Example
+                    plural: Examples
+                    nLevels: 1:10
+    # analyze:
+    #     module: runAnalyses
+    #     options:
+    #         analysisTypes:
+    #             example:
+    #                 - example
