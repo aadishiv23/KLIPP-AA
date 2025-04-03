@@ -65,21 +65,30 @@ uploadTypes:
 #    other options are module specific; see module definitions
 #----------------------------------------------------------------------
 appSteps:
-    upload: # nearly always the 1st step of every app
+    upload: # Step 1: Upload data package
         module: sourceFileUpload
-    assign: # usually the 2nd step of every app
-        module: assignSamples        
-        options:
-            categories:
-                example1: # category1
-                    singular: Example
-                    plural: Examples
-                    nLevels: 1:10
-                example2: # category2
-                    singular: Example
-                    plural: Examples
-                    nLevels: 1:10
-    # analyze:
+        shortLabel: Upload Data # Optional: Explicit label
+        shortDescription: Upload AmpliconSuite results package # Optional: Explicit description
+   
+    # assign: # Step 2: Assign samples (Commented out for now)
+    #     module: assignSamples        
+    #     options:
+    #         categories:
+    #             example1: # category1
+    #                 singular: Example
+    #                 plural: Examples
+    #                 nLevels: 1:10
+    #             example2: # category2
+    #                 singular: Example
+    #                 plural: Examples
+    #                 nLevels: 1:10
+
+    view_results: # Step 2 (or 3 if assign kept): View results <<< ADDED THIS STEP
+        module: viewAA               # Use the module we created
+        shortLabel: View Results     # Label for the sidebar
+        shortDescription: Visualize AmpliconSuite results # Description for overview page
+
+    # analyze: # Original analyze step (Commented out)
     #     module: runAnalyses
     #     options:
     #         analysisTypes:
