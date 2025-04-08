@@ -21,21 +21,68 @@ svPlotPath <- reactiveVal(NULL)
 #----------------------------------------------------------------------
 # Example: Observer to load data when the app step becomes active
 # (We'll need to refine this based on how data is passed between steps)
-# observe({
-#     # Check if data is ready from previous step (e.g., sourceFileUpload)
-#     # req(app$data$package$upload()) # Requires data package to be uploaded
-#     
-#     # Find and load the classification table file
-#     # tablePath <- app$data$package$getPath("classification_results_table") 
-#     # req(file.exists(tablePath))
-#     # loadedData <- data.table::fread(tablePath)
-#     # classificationData(loadedData)
-#     
-#     # Find the path to the SV plot PNG (assuming amplicon 1 for now)
-#     # Need logic here to select the correct amplicon based on user input or defaults
-#     # plotPaths <- app$data$package$findFiles("aa_sv_png", filter = "_amplicon1.png") 
-#     # if(length(plotPaths) > 0) svPlotPath(plotPaths[[1]]$path)
-# })
+# Load data once the uploaded package is ready
+observe({
+    # Access the uploaded data package reactive Wraper
+    # It triggers reactivity when the package is uploaded or changed.
+    package <- app$data$package$value # Get the package object from the reactive wrapper
+
+    # Req requires that the package is not NULL (i.e., has been uploaded)
+    req(package) 
+
+    # Find and load the classification table file using the key from config.yml
+    # getPath() finds the *one* file matching the 'classification_results_table' type
+    tablePath <- package$getPath("classification_results_table") 
+    
+    # Req requires that the path was found and the file exists
+    req(tablePath, file.exists(tablePath)) 
+    
+    # Load the data (using data.table::fread for efficiency with TSV)
+    # Add error handling for robustness
+    loadedData <- tryCatch({
+         data.table::fread(tablePath)
+    }, error = function(e) {
+         # Handle error, e.g., show a notification to the user
+         showNotification(
+             paste("Error loading classification table:", e$message), 
+             type = "error", 
+             duration = NULL
+         )
+         NULL # Return NULL if loading failed
+    })
+    
+    # Req requires that loading was successful
+    req(loadedData) 
+    
+    # Store the loaded data in the reactiveVal
+    classificationData(loadedData) 
+    
+    # --- Load the SV Plot Image Path (Example for Amplicon 1) ---
+    # findFiles() finds potentially *multiple* files matching the 'aa_sv_png' type
+    # We need logic to select the correct one (e.g., for amplicon 1 first)
+    svPlotPaths <- package$findFiles("aa_sv_png")
+    req(svPlotPaths) # Require that some PNG files were found
+
+    # Simple logic: find the one ending in 'amplicon1.png'
+    # More complex logic might be needed if numbering isn't guaranteed
+    amplicon1PlotPath <- NULL
+    for(filePath in svPlotPaths){
+        if(grepl("_amplicon1\\.png$", filePath$path)){ # Check if path ends with _amplicon1.png
+             amplicon1PlotPath <- filePath$path
+             break # Stop after finding the first match
+        }
+    }
+
+    # If we found amplicon 1's plot, store its path
+    if (!is.null(amplicon1PlotPath) && file.exists(amplicon1PlotPath)) {
+        svPlotPath(amplicon1PlotPath)
+    } else {
+         # Handle case where amplicon 1 plot wasn't found (optional)
+         showNotification("Amplicon 1 SV plot (.png) not found in package.", type = "warning")
+         svPlotPath(NULL) # Clear any previous path
+    }
+
+}) # End observe block
 
 #----------------------------------------------------------------------
 # Section: Render UI Elements

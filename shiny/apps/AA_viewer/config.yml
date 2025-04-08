@@ -94,3 +94,14 @@ appSteps:
     #         analysisTypes:
     #             example:
     #                 - example
+#----------------------------------------------------------------------
+# optional: R packages used by this specific app
+# defines dependencies needed when app/suite is installed via MDI commands
+#----------------------------------------------------------------------
+packages:
+    R:  # Packages available on CRAN
+        - DT
+        - data.table
+    # Bioconductor: # Add Bioconductor packages here if needed later
+        # - BiocManager 
+        # - GenomicRanges 
